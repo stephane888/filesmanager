@@ -1,0 +1,7 @@
+filesmanager.example:
+  path: '/filesmanager/post'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::build'
+  requirements:
+    _permission: 'access content'

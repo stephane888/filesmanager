@@ -1,0 +1,15 @@
+{
+    "name": "stephane888/filemanager",
+    "description": "permet d'ajouter les fichiers",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "stephane888",
+            "email": "kksasteph888@gmail.com"
+        }
+    ],
+    "require": {
+    	
+    }
+}

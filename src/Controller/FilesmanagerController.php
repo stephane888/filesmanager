@@ -6,6 +6,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
 
 /**
  * Returns responses for filesmanager routes.
@@ -18,6 +19,7 @@ class FilesmanagerController extends ControllerBase {
 	public function build(Request $Request){
 		$configs = $Request->getContent();
 		$configs = Json::decode( $configs );
+		$configs["filename"] = Html::getId( $configs["filename"] );
 		$fid = $this->base64_to_file( $configs["upload"], "public://Filesmanager/" . $configs["filename"] . "." . $configs["ext"] );
 		return $this->reponse( $fid );
 	}
@@ -35,15 +37,15 @@ class FilesmanagerController extends ControllerBase {
 	}
 	
 	/**
-	 * retourne le chemin absolue sans le domaine.
+	 * Retourne le chemin absolue sans le domaine.
 	 *
 	 * @param array $fid
 	 * @param String $image_style
 	 * @return string|array
 	 */
 	public function getImageUrlByFid($fid, $image_style = null){
-		if(! empty( $fid[0] )){
-			$file = \Drupal\file\Entity\File::load( $fid[0] );
+		if(! empty( $fid )){
+			$file = \Drupal\file\Entity\File::load( $fid );
 			if($file){
 				if(! empty( $image_style ) && \Drupal\image\Entity\ImageStyle::load( $image_style )){
 					$img_url = \Drupal\image\Entity\ImageStyle::load( $image_style )->buildUrl( $file->getFileUri() );

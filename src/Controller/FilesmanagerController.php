@@ -7,11 +7,75 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\File\FileSystem;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Drupal\file\Entity\File;
 
 /**
  * Returns responses for filesmanager routes.
  */
 class FilesmanagerController extends ControllerBase {
+	protected $FileSystem;
+	protected $destination = "public://Filesmanager/";
+	function __construct(FileSystem $FileSystem){
+		$this->FileSystem = $FileSystem;
+	}
+	
+	/**
+	 *
+	 * {@inheritdoc}
+	 */
+	public static function create(ContainerInterface $container){
+		// return new static($container->get('prestashop_rest_api.cron'), $container->get('prestashop_rest_api.build_product_to_drupal'));
+		return new static( $container->get( 'file_system' ) );
+	}
+	public function files(Request $Request){
+		$file = $Request->files->get( 'file__upload' );
+		$fid = [];
+		if(! empty( $file )){
+			$fid = $this->fileUpload( $file );
+		}
+		return $this->reponse( $fid );
+	}
+	/**
+	 * Enregistre un fichier.
+	 *
+	 * @param UploadedFile $file
+	 */
+	function fileUpload(UploadedFile $file){
+		$user = \Drupal::currentUser();
+		$originalName = explode( ".", $file->getClientOriginalName() );
+		$fileName = Html::getId( $originalName[0] ) . '.' . $file->getClientOriginalExtension();
+		// $new_file = $file->move( $this->destination );
+		$source = $file->getPath() . '/' . $file->getFilename();
+		$destination = $this->destination . $fileName;
+		/** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
+		$stream_wrapper_manager = \Drupal::service( 'stream_wrapper_manager' );
+		if(! $stream_wrapper_manager->isValidUri( $destination )){
+			\Drupal::logger( 'file' )->notice( 'The data could not be saved because the destination %destination is invalid. This may be caused by improper use of file_save_data() or a missing stream wrapper.', [
+					'%destination'=> $destination
+			] );
+			\Drupal::messenger()->addError( t( 'The data could not be saved because the destination is invalid. More information is available in the system log.' ) );
+			return FALSE;
+		}
+		$uri = $this->FileSystem->move( $source, $destination );
+		$file = File::create( [
+				'uri'=> $uri,
+				'uid'=> $user->id(),
+				'status'=> FILE_STATUS_PERMANENT
+		] );
+		$file->setFilename( $this->FileSystem->basename( $destination ) );
+		$fid = $file->save();
+		// $fid = file_save_data( $file, $this->destination . $fileName );
+		if($fid){
+			return [
+					'id'=> $file->id(),
+					'url'=> file_url_transform_relative( file_create_url( $file->getFileUri() ) ),
+					'filename'=> $file->getFilename()
+			];
+		}
+	}
 	
 	/**
 	 * Builds the response.
@@ -20,16 +84,24 @@ class FilesmanagerController extends ControllerBase {
 		$configs = $Request->getContent();
 		$configs = Json::decode( $configs );
 		$configs["filename"] = Html::getId( $configs["filename"] );
-		$fid = $this->base64_to_file( $configs["upload"], "public://Filesmanager/" . $configs["filename"] . "." . $configs["ext"] );
+		$fid = $this->base64_to_file( $configs["upload"], "public://Filesmanager/" . $configs["filename"] . "." . $configs["ext"], $configs );
 		return $this->reponse( $fid );
 	}
-	public function base64_to_file($base64_string, $destination){
+	/**
+	 *
+	 * @param String $base64_string
+	 * @param String $destination
+	 * @param array $configs
+	 * @return string[]|array[]|NULL[]|array
+	 */
+	public function base64_to_file($base64_string, $destination, $configs = []){
 		// $data = explode( ',', $base64_string );
-		$fid = file_save_data( base64_decode( $base64_string ), $destination );
-		if($fid){
+		$file = file_save_data( base64_decode( $base64_string ), $destination );
+		if($file){
 			return [
-					'id'=> $fid->id(),
-					'url'=> $this->getImageUrlByFid( $fid->id() )
+					'id'=> $file->id(),
+					'url'=> $this->getImageUrlByFid( $file->id() ),
+					'filename'=> $file->getFilename()
 			];
 		}
 		else

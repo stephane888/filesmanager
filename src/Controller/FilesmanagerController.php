@@ -30,6 +30,11 @@ class FilesmanagerController extends ControllerBase {
 		// return new static($container->get('prestashop_rest_api.cron'), $container->get('prestashop_rest_api.build_product_to_drupal'));
 		return new static( $container->get( 'file_system' ) );
 	}
+	/**
+	 *
+	 * @param Request $Request
+	 * @return \Symfony\Component\HttpFoundation\JsonResponse
+	 */
 	public function files(Request $Request){
 		$file = $Request->files->get( 'file__upload' );
 		$fid = [];

@@ -1,7 +1,7 @@
 {
     "name": "stephane888/filemanager",
     "description": "permet d'ajouter les fichiers",
-    "type": "library",
+    "type": "drupal-module-custom",
     "license": "MIT",
     "authors": [
         {

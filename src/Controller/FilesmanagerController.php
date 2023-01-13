@@ -87,7 +87,8 @@ class FilesmanagerController extends ControllerBase {
   }
   
   /**
-   * Builds the response.
+   * Elle ne sauvegarde pas deux foix une image portant le meme nom, mais ajoute
+   * une entrée dans file.usage;
    */
   public function build(Request $Request) {
     $configs = $Request->getContent();
@@ -107,7 +108,7 @@ class FilesmanagerController extends ControllerBase {
    * @param array $configs
    * @return string[]|array[]|NULL[]|array
    */
-  public function base64_to_file($base64_string, $destination, $configs = []) {
+  protected function base64_to_file($base64_string, $destination, $configs = []) {
     // $data = explode( ',', $base64_string );
     $file = file_save_data(base64_decode($base64_string), $destination);
     if ($file) {
@@ -122,13 +123,37 @@ class FilesmanagerController extends ControllerBase {
   }
   
   /**
+   * Permet de supprimer l'utilisation et de l'image si cette derniere n'est
+   * plus utiliser ailleurs.
+   */
+  public function removeImage($fid, $module) {
+    $file = \Drupal\file\Entity\File::load($fid);
+    if ($file) {
+      /**
+       *
+       * @var \Drupal\file\FileUsage\DatabaseFileUsageBackend $file_usage
+       */
+      $file_usage = \Drupal::service('file.usage');
+      // On supprime pour l'utilisation
+      $file_usage->delete($file, $module);
+      $usage = $file_usage->listUsage($file);
+      // on supprime le fichier s'il n'est plus utiliser.
+      if (count($usage) == 0) {
+        $file->delete();
+      }
+      return $this->reponse($fid . " is deleted");
+    }
+    return $this->reponse($fid . " not existed ", 400);
+  }
+  
+  /**
    * Retourne le chemin absolue sans le domaine.
    *
    * @param array $fid
    * @param String $image_style
    * @return string|array
    */
-  public function getImageUrlByFid($fid, $image_style = null) {
+  protected function getImageUrlByFid($fid, $image_style = null) {
     if (!empty($fid)) {
       $file = \Drupal\file\Entity\File::load($fid);
       if ($file) {

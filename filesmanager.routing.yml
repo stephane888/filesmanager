@@ -5,6 +5,15 @@ filesmanager.base64:
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::build'
   requirements:
     _permission: 'access content'
+    
+    
+filesmanager.file.delete:
+  path: '/filesmanager/delete/{fid}/{module}'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::removeImage'
+  requirements:
+    _permission: 'access content'
 
 
 filesmanager.files:

@@ -23,3 +23,11 @@ filesmanager.files:
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::files'
   requirements:
     _permission: 'access content'
+    
+vuejs_entity.image:
+  path: '/filesmanager/image/{fid}/{style}'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::getImage'
+  requirements:
+    _permission: 'access content'

@@ -11,6 +11,7 @@ use Drupal\Core\File\FileSystem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Drupal\file\Entity\File;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Returns responses for filesmanager routes.
@@ -91,14 +92,18 @@ class FilesmanagerController extends ControllerBase {
    * une entrée dans file.usage;
    */
   public function build(Request $Request) {
-    $configs = $Request->getContent();
-    $configs = Json::decode($configs);
-    $configs["filename"] = Html::getId($configs["filename"]);
-    $fid = $this->base64_to_file($configs["upload"], "public://filesmanager/" . $configs["filename"] . "." . $configs["ext"], $configs);
-    if ($fid)
-      return $this->reponse($fid);
-    else
-      $this->reponse($fid, 400, "L'image n'a pas pu etre sauvegarder");
+    try {
+      $configs = $Request->getContent();
+      $configs = Json::decode($configs);
+      $configs["filename"] = Html::getId($configs["filename"]);
+      $fid = $this->base64_to_file($configs["upload"], "public://filesmanager/" . $configs["filename"] . "." . $configs["ext"], $configs);
+      if ($fid)
+        return $this->reponse($fid);
+      throw new \Exception("L'image n'a pas pu etre sauvegarder");
+    }
+    catch (\Exception $e) {
+      return $this->reponse($fid, 400, $e->getMessage());
+    }
   }
   
   /**
@@ -144,6 +149,26 @@ class FilesmanagerController extends ControllerBase {
       return $this->reponse($fid . " is deleted");
     }
     return $this->reponse($fid . " not existed ", 400);
+  }
+  
+  /**
+   * Builds the response.
+   */
+  public function getImage($fid, $style) {
+    $file = File::load($fid);
+    $img_url = null;
+    if ($file) {
+      $renderStyle = ImageStyle::load($style);
+      if ($renderStyle) {
+        $img_url = $renderStyle->buildUrl($file->getFileUri());
+      }
+      else
+        // $img_url =
+        // \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+        // ou
+        $img_url = \Drupal::service('file_system')->realpath($file->getFileUri());
+    }
+    return $this->reponse($img_url);
   }
   
   /**

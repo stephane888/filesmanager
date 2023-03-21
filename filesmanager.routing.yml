@@ -24,7 +24,7 @@ filesmanager.files:
   requirements:
     _permission: 'access content'
     
-vuejs_entity.image:
+filesmanager.image:
   path: '/filesmanager/image/{fid}/{style}'
   defaults:
     _title: 'Example'

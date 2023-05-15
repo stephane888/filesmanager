@@ -12,6 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\file\FileInterface;
 
 /**
  * Returns responses for filesmanager routes.
@@ -115,6 +117,16 @@ class FilesmanagerController extends ControllerBase {
    */
   protected function base64_to_file($base64_string, $destination, $configs = []) {
     // $data = explode( ',', $base64_string );
+    /**
+     *
+     * @var \Drupal\Core\File\FileSystem $filesystem
+     */
+    $filesystem = \Drupal::service('file_system');
+    // Check the directory exists before writing data to it.
+    $filesystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    // Save the default icon file.
+    // $file_uri = $filesystem->saveData($stream_file, $icon_file_destination);
+    // on prefere enregistrer avec cette fonction.
     $file = file_save_data(base64_decode($base64_string), $destination);
     if ($file) {
       return [

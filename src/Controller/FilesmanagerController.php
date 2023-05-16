@@ -20,7 +20,7 @@ use Drupal\file\FileInterface;
  */
 class FilesmanagerController extends ControllerBase {
   protected $FileSystem;
-  protected $destination = "public://Filesmanager/";
+  protected $destination = "public://filesmanager/";
   
   function __construct(FileSystem $FileSystem) {
     $this->FileSystem = $FileSystem;
@@ -98,7 +98,10 @@ class FilesmanagerController extends ControllerBase {
       $configs = $Request->getContent();
       $configs = Json::decode($configs);
       $configs["filename"] = Html::getId($configs["filename"]);
-      $fid = $this->base64_to_file($configs["upload"], "public://filesmanager/" . $configs["filename"] . "." . $configs["ext"], $configs);
+      // $fid = $this->base64_to_file($configs["upload"],
+      // "public://filesmanager/" . $configs["filename"] . "." .
+      // $configs["ext"], $configs);
+      $fid = $this->base64_to_file($configs["upload"], $configs);
       if ($fid)
         return $this->reponse($fid);
       throw new \Exception("L'image n'a pas pu etre sauvegarder");
@@ -115,7 +118,7 @@ class FilesmanagerController extends ControllerBase {
    * @param array $configs
    * @return string[]|array[]|NULL[]|array
    */
-  protected function base64_to_file($base64_string, $destination, $configs = []) {
+  protected function base64_to_file($base64_string, $configs = []) {
     // $data = explode( ',', $base64_string );
     /**
      *
@@ -123,11 +126,12 @@ class FilesmanagerController extends ControllerBase {
      */
     $filesystem = \Drupal::service('file_system');
     // Check the directory exists before writing data to it.
-    $filesystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $filesystem->prepareDirectory($this->destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $file_destination = $this->destination . $configs["filename"] . "." . $configs["ext"];
     // Save the default icon file.
-    // $file_uri = $filesystem->saveData($stream_file, $icon_file_destination);
-    // on prefere enregistrer avec cette fonction.
-    $file = file_save_data(base64_decode($base64_string), $destination);
+    /** @var \Drupal\file\FileRepositoryInterface $fileRepository */
+    $fileRepository = \Drupal::service('file.repository');
+    $file = $fileRepository->writeData(base64_decode($base64_string), $file_destination);
     if ($file) {
       return [
         'id' => $file->id(),

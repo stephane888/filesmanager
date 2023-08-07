@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\file\FileInterface;
 
 /**
  * Returns responses for filesmanager routes.

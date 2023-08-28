@@ -13,18 +13,21 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\File\FileSystemInterface;
+use \Drupal\Core\File\FileUrlGeneratorInterface;
 
 /**
  * Returns responses for filesmanager routes.
  */
 class FilesmanagerController extends ControllerBase {
   protected $FileSystem;
+  protected $fileUrlGenerator;
   protected $destination = "public://filesmanager/";
-  
-  function __construct(FileSystem $FileSystem) {
+
+  function __construct(FileSystem $FileSystem, FileUrlGeneratorInterface $FileUrlGenerator) {
     $this->FileSystem = $FileSystem;
+    $this->fileUrlGenerator = $FileUrlGenerator;
   }
-  
+
   /**
    *
    * {@inheritdoc}
@@ -32,9 +35,9 @@ class FilesmanagerController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     // return new static($container->get('prestashop_rest_api.cron'),
     // $container->get('prestashop_rest_api.build_product_to_drupal'));
-    return new static($container->get('file_system'));
+    return new static($container->get('file_system'), $container->get('file_url_generator'));
   }
-  
+
   /**
    *
    * @param Request $Request
@@ -48,7 +51,7 @@ class FilesmanagerController extends ControllerBase {
     }
     return $this->reponse($fid);
   }
-  
+
   /**
    * Enregistre un fichier.
    *
@@ -82,12 +85,12 @@ class FilesmanagerController extends ControllerBase {
     if ($fid) {
       return [
         'id' => $file->id(),
-        'url' => file_url_transform_relative(file_create_url($file->getFileUri())),
+        'url' => $this->fileUrlGenerator->generateString($file->getFileUri()),
         'filename' => $file->getFilename()
       ];
     }
   }
-  
+
   /**
    * Elle ne sauvegarde pas deux foix une image portant le meme nom, mais ajoute
    * une entrée dans file.usage;
@@ -104,16 +107,14 @@ class FilesmanagerController extends ControllerBase {
       if ($fid)
         return $this->reponse($fid);
       throw new \Exception("L'image n'a pas pu etre sauvegarder");
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
       return $this->reponse($fid, 400, $e->getMessage());
     }
   }
-  
+
   /**
    *
    * @param String $base64_string
-   * @param String $destination
    * @param array $configs
    * @return string[]|array[]|NULL[]|array
    */
@@ -137,11 +138,10 @@ class FilesmanagerController extends ControllerBase {
         'url' => $this->getImageUrlByFid($file->id()),
         'filename' => $file->getFilename()
       ];
-    }
-    else
+    } else
       return FALSE;
   }
-  
+
   /**
    * Permet de supprimer l'utilisation et de l'image si cette derniere n'est
    * plus utiliser ailleurs.
@@ -165,7 +165,7 @@ class FilesmanagerController extends ControllerBase {
     }
     return $this->reponse($fid . " not existed ", 400);
   }
-  
+
   /**
    * Builds the response.
    */
@@ -176,8 +176,7 @@ class FilesmanagerController extends ControllerBase {
       $renderStyle = ImageStyle::load($style);
       if ($renderStyle) {
         $img_url = $renderStyle->buildUrl($file->getFileUri());
-      }
-      else
+      } else
         // $img_url =
         // \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
         // ou
@@ -185,7 +184,7 @@ class FilesmanagerController extends ControllerBase {
     }
     return $this->reponse($img_url);
   }
-  
+
   /**
    * Retourne le chemin absolue sans le domaine.
    *
@@ -199,9 +198,8 @@ class FilesmanagerController extends ControllerBase {
       if ($file) {
         if (!empty($image_style) && \Drupal\image\Entity\ImageStyle::load($image_style)) {
           $img_url = \Drupal\image\Entity\ImageStyle::load($image_style)->buildUrl($file->getFileUri());
-        }
-        else {
-          $img_url = file_create_url($file->getFileUri());
+        } else {
+          $img_url = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
         }
         // remove domaine
         $img_url = explode(\Drupal::request()->getSchemeAndHttpHost(), $img_url);
@@ -210,7 +208,7 @@ class FilesmanagerController extends ControllerBase {
     }
     return [];
   }
-  
+
   /**
    *
    * @param array|string $configs
@@ -227,5 +225,4 @@ class FilesmanagerController extends ControllerBase {
     $reponse->setContent($configs);
     return $reponse;
   }
-  
 }

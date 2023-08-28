@@ -77,7 +77,7 @@ class FilesmanagerController extends ControllerBase {
     $file = File::create([
       'uri' => $uri,
       'uid' => $user->id(),
-      'status' => FILE_STATUS_PERMANENT
+      'status' => \Drupal\file\FileInterface::STATUS_PERMANENT
     ]);
     $file->setFilename($this->FileSystem->basename($destination));
     $fid = $file->save();

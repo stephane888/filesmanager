@@ -1,7 +1,7 @@
 {
     "name": "habeuk/filesmanager",
     "description": "permet d'ajouter les fichiers",
-    "type": "drupal-module-custom",
+    "type": "drupal-custom-module",
     "license": "MIT",
     "authors": [
         {

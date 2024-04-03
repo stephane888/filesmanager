@@ -1,33 +1,39 @@
 filesmanager.base64:
-  path: '/filesmanager/post'
+  path: "/filesmanager/post"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::build'
   requirements:
-    _permission: 'access content'
-    
-    
+    _permission: "access content"
+
 filesmanager.file.delete:
-  path: '/filesmanager/delete/{fid}/{module}'
+  path: "/filesmanager/delete/{fid}/{module}"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::removeImage'
   requirements:
-    _permission: 'access content'
-
+    _permission: "access content"
 
 filesmanager.files:
-  path: '/filesmanager/files'
+  path: "/filesmanager/files"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::files'
   requirements:
-    _permission: 'access content'
-    
+    _permission: "access content"
+
 filesmanager.image:
-  path: '/filesmanager/image/{fid}/{style}'
+  path: "/filesmanager/image/{fid}/{style}"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::getImage'
   requirements:
-    _permission: 'access content'
+    _permission: "access content"
+
+filesmanager.hbk_generic:
+  path: "/filesmanager/hbk_generic/{fid}/{style}"
+  defaults:
+    _title: "Example"
+    _controller: '\Drupal\filesmanager\Controller\FilesmanagerController::getHbkFileThumb'
+  requirements:
+    _permission: "access content"

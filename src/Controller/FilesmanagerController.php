@@ -2,6 +2,7 @@
 
 namespace Drupal\filesmanager\Controller;
 
+use Drupal;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,6 +15,7 @@ use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\File\FileSystemInterface;
 use \Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\more_fields_video\Entity\MultiformatVideo;
 
 /**
  * Returns responses for filesmanager routes.
@@ -184,6 +186,17 @@ class FilesmanagerController extends ControllerBase {
     }
     return $this->reponse($img_url);
   }
+
+
+  /**
+   * Builds the response.
+   */
+  public function getHbkFileThumb($fid, $style) {
+    $file = MultiformatVideo::load($fid);
+    $id = $file ? $file->getThumbId() : $fid;
+    return $this->getImage($id, $style);
+  }
+
 
   /**
    * Retourne le chemin absolue sans le domaine.

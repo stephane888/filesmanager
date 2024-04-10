@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\File\FileSystem;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -15,6 +16,7 @@ use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\File\FileSystemInterface;
 use \Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\more_fields\Plugin\Field\FieldWidget\HbkFileWidget;
 use Drupal\more_fields_video\Entity\MultiformatVideo;
 
 /**
@@ -106,8 +108,31 @@ class FilesmanagerController extends ControllerBase {
       // "public://filesmanager/" . $configs["filename"] . "." .
       // $configs["ext"], $configs);
       $fid = $this->base64_to_file($configs["upload"], $configs);
-      if ($fid)
+      if ($fid) {
+        $file = File::load($fid["id"]);
+        $fileType = explode("/", $file->getMimeType())[0];
+        if (\Drupal::moduleHandler()->moduleExists('more_fields_video') && $fileType === "video") {
+          /**
+           * @var EntityStorageInterface  $multiformatHandler 
+           */
+          $multiformatHandler = \Drupal::service("entity_type.manager")->getStorage("multiformat_video");
+          $multiformat = $multiformatHandler->load($file->id());
+          if (!$multiformat) {
+            # code...
+            $result = \Drupal::service("more_fields_video.video_converter")->createThumbFile((int)$file->id());
+            if ($result !== FALSE) {
+              /**
+               * @param MultiformatVideo $multiformat
+               */
+              $multiformat =  HbkFileWidget::sync_multiformat($file->id(), $result, $multiformatHandler);
+              $fid["url"] = $this->getImageUrlByFid($multiformat->getThumbId());
+              $fid["file_id"] = $multiformat->id();
+              $fid["th_id"] = $multiformat->getThumbId();
+            }
+          }
+        }
         return $this->reponse($fid);
+      }
       throw new \Exception("L'image n'a pas pu etre sauvegarder");
     } catch (\Exception $e) {
       return $this->reponse($fid, 400, $e->getMessage());

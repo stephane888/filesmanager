@@ -125,9 +125,10 @@ class FilesmanagerController extends ControllerBase {
                * @param MultiformatVideo $multiformat
                */
               $multiformat =  HbkFileWidget::sync_multiformat($file->id(), $result, $multiformatHandler);
-              $fid["url"] = $this->getImageUrlByFid($multiformat->getThumbId());
+              $fid["preview"] = $this->getImageUrlByFid($multiformat->getThumbId());
               $fid["file_id"] = $multiformat->id();
               $fid["th_id"] = $multiformat->getThumbId();
+              // $fid["preview"]
             }
           }
         }

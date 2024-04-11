@@ -128,7 +128,6 @@ class FilesmanagerController extends ControllerBase {
               $fid["preview"] = $this->getImageUrlByFid($multiformat->getThumbId());
               $fid["file_id"] = $multiformat->id();
               $fid["th_id"] = $multiformat->getThumbId();
-              // $fid["preview"]
             }
           }
         }

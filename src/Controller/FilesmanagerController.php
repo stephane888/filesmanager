@@ -120,12 +120,13 @@ class FilesmanagerController extends ControllerBase {
           if (!$multiformat) {
             # code...
             $result = \Drupal::service("more_fields_video.video_converter")->createThumbFile((int)$file->id());
+            $image_style = $configs["image_style"] ?? "medium";
             if ($result !== FALSE) {
               /**
                * @param MultiformatVideo $multiformat
                */
               $multiformat =  HbkFileWidget::sync_multiformat($file->id(), $result, $multiformatHandler);
-              $fid["preview"] = $this->getImageUrlByFid($multiformat->getThumbId());
+              $fid["preview"] = $this->getImageUrl($multiformat->getThumbId(), $image_style);
               $fid["file_id"] = $multiformat->id();
               $fid["th_id"] = $multiformat->getThumbId();
             }
@@ -197,6 +198,15 @@ class FilesmanagerController extends ControllerBase {
    * Builds the response.
    */
   public function getImage($fid, $style) {
+    $img_url = $this->getImageUrl($fid, $style);
+    return $this->reponse($img_url);
+  }
+
+
+  /**
+   * Build the Styled image
+   */
+  public function getImageUrl($fid, $style) {
     $file = File::load($fid);
     $img_url = null;
     if ($file) {
@@ -209,7 +219,7 @@ class FilesmanagerController extends ControllerBase {
         // ou
         $img_url = \Drupal::service('file_system')->realpath($file->getFileUri());
     }
-    return $this->reponse($img_url);
+    return $img_url;
   }
 
 

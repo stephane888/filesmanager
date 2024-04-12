@@ -109,27 +109,20 @@ class FilesmanagerController extends ControllerBase {
       // $configs["ext"], $configs);
       $fid = $this->base64_to_file($configs["upload"], $configs);
       if ($fid) {
-        $file = File::load($fid["id"]);
-        $fileType = explode("/", $file->getMimeType())[0];
-        if (\Drupal::moduleHandler()->moduleExists('more_fields_video') && $fileType === "video") {
+        if (\Drupal::moduleHandler()->moduleExists('more_fields_video')) {
           /**
-           * @var EntityStorageInterface  $multiformatHandler 
+           * @var MultiformatVideo $multiformat
            */
-          $multiformatHandler = \Drupal::service("entity_type.manager")->getStorage("multiformat_video");
-          $multiformat = $multiformatHandler->load($file->id());
-          if (!$multiformat) {
-            # code...
-            $result = \Drupal::service("more_fields_video.video_converter")->createThumbFile((int)$file->id());
+          [
+            "multiformat" => $multiformat,
+            "furi" => $fileUri
+          ] = \Drupal::service("more_fields_video.video_converter")->manageUploadedFile($fid["id"]);
+          if ($multiformat) {
             $image_style = $configs["image_style"] ?? "medium";
-            if ($result !== FALSE) {
-              /**
-               * @param MultiformatVideo $multiformat
-               */
-              $multiformat =  HbkFileWidget::sync_multiformat($file->id(), $result, $multiformatHandler);
-              $fid["preview"] = $this->getImageUrl($multiformat->getThumbId(), $image_style);
-              $fid["file_id"] = $multiformat->id();
-              $fid["th_id"] = $multiformat->getThumbId();
-            }
+            $fid["preview"] = $this->getImageUrl($multiformat->getThumbId(), $image_style);
+            $fid["file_id"] = $multiformat->id();
+            $fid["th_id"] = $multiformat->getThumbId();
+            $fid["url"] = $fileUri;
           }
         }
         return $this->reponse($fid);
